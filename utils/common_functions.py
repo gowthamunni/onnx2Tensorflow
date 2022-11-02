@@ -343,7 +343,16 @@ def inverted_operation_enable_disable(func):
                 and onnx_node_output_shape.count(None) != len(onnx_node_output_shape) \
                 and batch_size is not None:
                 onnx_node_output_shape[0] = batch_size
-            tf_node_output_shape = tf_layers_dict[onnx_node_output.name]['tf_node'].shape
+            if onnx_node_output.name in tf_layers_dict.keys():
+                if hasattr(tf_layers_dict[onnx_node_output.name]['tf_node'],"shape"):
+                    tf_node_output_shape = tf_layers_dict[onnx_node_output.name]['tf_node'].shape
+                elif hasattr(tf_layers_dict[onnx_node_output.name]['tf_node'],"idx"):
+                    tf_node_output_shape = tf_layers_dict[onnx_node_output.name]['tf_node'].idx.shape
+                else:
+                    raise AttributeError("Donot have shape attribute or is None.")
+            else:
+                print("Outputs not in tf_layer_dict")
+                continue
             output_shape_trans = output_shape_trans or (onnx_node_output_shape != tf_node_output_shape)
             tf_layers_dict[onnx_node_output.name]['before_op_output_shape_trans'] = output_shape_trans
         return result
